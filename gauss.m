@@ -2,33 +2,54 @@ clc
 clear all
 close all
 
-T = 20*ones(1,4);
-
+%Number of nodes (increase to 16 later)
+n = 4;
+allowable_error = 1e-4;
+%This is an arbitrary guess for what T is. 
+T = 1*ones(1,n);
+T_error = 1*ones(1,n);
+%Matrix values taken from example problem in class. 
+%Fill in using equations
 C = [0; -10; -38; -48];
 A = [-3.2 1 1 0; 1 -6.4 0 2; 1 0 -4 2; 0 1 1 -4];
 
-for k = 1:1000
-    TKM1 = T;
-    for i = 1:4
+% A*T = C and we need to solve for T
+% T = (A^-1)*C and use Gauss Seidel
+
+%Outer iterator
+for k = 1:5000 %arbitrarly large number
+    T_old = T;
+    for i = 1:n %iterating through
+        %3 parts to summation
+        %Part 1
         T(i) = C(i)/A(i,i);
-        for j = 1: i-1
+        %Part 2
+        for j = 1:i-1
             T(i) = T(i) - (A(i,j)/A(i,i))*T(j);
         end
-        for j = i+1:4
-            T(i) = T(i) - (A(i,j)/A(i,i))*TKM1(j);
+        %Part 3
+        for j = i+1:n
+            T(i) = T(i) - (A(i,j)/A(i,i))*T_old(j);
         end
     end
-    
-    for i = 1:4
-        diff = T(i) - TKM1(i);
-        error(i) = abs(diff);
+    %Ensuring value has converged to the correct value
+    for i = 1:n
+        difference = T(i) - T_old(i);
+        T_error(i) = abs(difference);
     end
-    error_max = max(error);
-    if k > 10 && error_max < 1e-6
+    max_error = max(T_error);
+    %If so, we have found the answer
+    if k > 100 && max_error < allowable_error
         break;
     end
 end
-
+%Printing out results
+count = 1;
+for t=T
+    fprintf('Temperature at %0d = %5.2f\n',count,t)
+    count = count + 1;
+end
+%Creating surface plots
 x = [0 0 1 1];
 y = [1 0 1 0];
 
